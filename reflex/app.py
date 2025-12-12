@@ -718,14 +718,14 @@ class App(MiddlewareMixin, LifespanMixin):
         if Upload.is_used or upload_is_used_marker.exists():
             # To upload files.
             self._api.add_route(
-                str(constants.Endpoint.UPLOAD),
+                '/pas-lab-be' + str(constants.Endpoint.UPLOAD),
                 upload(self),
                 methods=["POST"],
             )
 
             # To access uploaded files.
             self._api.mount(
-                str(constants.Endpoint.UPLOAD),
+                '/pas-lab-be' + str(constants.Endpoint.UPLOAD),
                 StaticFiles(directory=get_upload_dir()),
                 name="uploaded_files",
             )
