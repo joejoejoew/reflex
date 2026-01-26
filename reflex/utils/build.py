@@ -251,6 +251,11 @@ def build():
                 wdir / constants.Dirs.STATIC / frontend_path / child.name,
             )
 
+        path_ops.cp(
+            wdir / constants.Dirs.STATIC / frontend_path / constants.ReactRouter.SPA_FALLBACK,
+            wdir / constants.Dirs.STATIC / "index.html",
+            )
+
 
 def setup_frontend(
     root: Path,

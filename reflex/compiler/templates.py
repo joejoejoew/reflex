@@ -559,6 +559,23 @@ export default defineConfig((config) => ({{
     alwaysUseReactDomServerNode(),
     reactRouter(),
     safariCacheBustPlugin(),
+    {{
+      name: 'add-charset-header',
+      configureServer(server) {{
+        server.middlewares.use((req, res, next) => {{
+          const originalWriteHead = res.writeHead;
+          res.writeHead = function (...args) {{
+            const headers = args[1] || {{}};
+            const contentType = headers['content-type'] || res.getHeader('content-type');
+            if (contentType && contentType.includes('text/html') && !contentType.includes('charset')) {{
+              res.setHeader('content-type', 'text/html; charset=utf-8');
+            }}
+            return originalWriteHead.apply(res, args);
+          }};
+          next();
+        }});
+      }}
+    }},
   ].concat({"[fullReload()]" if force_full_reload else "[]"}),
   build: {{
     assetsDir: "{base}assets".slice(1),
