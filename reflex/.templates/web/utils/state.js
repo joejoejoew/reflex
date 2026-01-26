@@ -101,14 +101,7 @@ export const getBackendURL = (url_str) => {
     // Use the frontend domain to access the backend
     const frontend_hostname = window.location.hostname;
     endpoint.hostname = frontend_hostname;
-    if (window.location.protocol === "https:") {
-      if (endpoint.protocol === "ws:") {
-        endpoint.protocol = "wss:";
-      } else if (endpoint.protocol === "http:") {
-        endpoint.protocol = "https:";
-      }
-      endpoint.port = ""; // Assume websocket is on https port via load balancer.
-    }
+    endpoint.protocol = window.location.protocol;
   }
   return endpoint;
 };
@@ -555,9 +548,12 @@ export const connect = async (
   const on_hydrated_queue = [];
 
   // Create the socket.
-  socket.current = io(endpoint.href, {
-    path: endpoint["pathname"],
-    transports: transports,
+  const url = new URL(endpoint.href);
+  const baseUrl = `${url.protocol}//${url.host}`;
+  socket.current = io(baseUrl, {
+    path: '/pas-lab-be/_event',
+    transports: ["polling"],  // Force polling only, no WebSocket
+    upgrade: false,           // Explicitly disable upgrade
     protocols: [reflexEnvironment.version],
     autoUnref: false,
     query: { token: getToken() },

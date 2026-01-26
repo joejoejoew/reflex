@@ -484,8 +484,28 @@ class App(MiddlewareMixin, LifespanMixin):
         if "breakpoints" in self.style:
             set_breakpoints(self.style.pop("breakpoints"))
 
+
+        class RequestLoggerMiddleware:
+          def __init__(self, app):
+            self.app = app
+
+          async def __call__(self, scope, receive, send):
+              if scope["type"] == "http":
+                  try:
+                      print(f"DEBUG REQUEST: {scope['method']} {scope['path']}")
+                      print(f"DEBUG QUERY: {scope.get('query_string', b'').decode()}")
+                      print(f"DEBUG HEADERS:")
+                      for name, value in scope.get("headers", []):
+                          print(f"  {name.decode()}: {value.decode()}")
+                      print("---")
+                  except Exception as e:
+                      print(f"Error logging request: {e}")
+              await self.app(scope, receive, send)
+
         # Set up the API.
         self._api = Starlette()
+        self._api.router.redirect_slashes = False
+        # self._api.add_middleware(RequestLoggerMiddleware)
         App._add_cors(self._api)
         self._add_default_endpoints()
 
@@ -557,7 +577,7 @@ class App(MiddlewareMixin, LifespanMixin):
 
         # Create the socket app. Note event endpoint constant replaces the default 'socket.io' path.
         socket_app = EngineIOApp(self.sio, socketio_path="")
-        namespace = config.get_event_namespace()
+        namespace = '/' #config.get_event_namespace()
 
         # Create the event namespace and attach the main app. Not related to any paths.
         self._event_namespace = EventNamespace(namespace, self)
@@ -593,7 +613,7 @@ class App(MiddlewareMixin, LifespanMixin):
                     return await self.app(scope, receive, modified_send)
 
             socket_app_with_headers = HeaderMiddleware(socket_app)
-            self._api.mount(str(constants.Endpoint.EVENT), socket_app_with_headers)
+            self._api.mount('/pas-lab-be' + str(constants.Endpoint.EVENT) + '/', socket_app_with_headers)
 
         # Check the exception handlers
         self._validate_exception_handlers()
@@ -697,14 +717,14 @@ class App(MiddlewareMixin, LifespanMixin):
         if Upload.is_used or upload_is_used_marker.exists():
             # To upload files.
             self._api.add_route(
-                str(constants.Endpoint.UPLOAD),
+                '/pas-lab-be' + str(constants.Endpoint.UPLOAD),
                 upload(self),
                 methods=["POST"],
             )
 
             # To access uploaded files.
             self._api.mount(
-                str(constants.Endpoint.UPLOAD),
+                '/pas-lab-be' + str(constants.Endpoint.UPLOAD),
                 StaticFiles(directory=get_upload_dir()),
                 name="uploaded_files",
             )

@@ -19,7 +19,7 @@ from reflex.components.base.document import Meta as ReactMeta
 from reflex.components.component import Component, ComponentStyle, CustomComponent
 from reflex.components.el.elements.metadata import Head, Link, Meta, Title
 from reflex.components.el.elements.other import Html
-from reflex.components.el.elements.sectioning import Body
+from reflex.components.el.elements.sectioning import Body, Main
 from reflex.constants.state import FIELD_MARKER
 from reflex.istate.storage import Cookie, LocalStorage, SessionStorage
 from reflex.state import BaseState, _resolve_delta
@@ -419,15 +419,11 @@ def create_document_root(
         *maybe_head_components,
         *always_head_components,
     ]
-    html_component = Html.create(
-        Head.create(*head_components),
-        Body.create(
-            Var("children"),
-            ScrollRestoration.create(),
-            Scripts.create(),
-        ),
-        lang=html_lang or "en",
-        custom_attrs=html_custom_attrs or {},
+    html_component = Main.create(
+        *head_components,
+        Var("children"),
+        ScrollRestoration.create(),
+        Scripts.create(),
     )
     hooks = html_component._get_all_hooks()
     if hooks:
